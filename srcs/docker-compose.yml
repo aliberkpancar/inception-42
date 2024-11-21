@@ -1,0 +1,55 @@
+version: "3.7"
+
+services:
+  nginx:
+    build:
+      context: ./requirements/nginx
+    restart: always
+    depends_on:
+      - wordpress
+    ports:
+      - "443:443"
+    volumes:
+      - wordpress_files:/var/www/html
+    networks:
+      - bridge_inception
+
+  wordpress: 
+    build:
+      context: ./requirements/wordpress
+    restart: always
+    env_file: .env
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mariadb
+    volumes:
+      - wordpress_files:/var/www/html
+    networks:
+      - bridge_inception
+
+  mariadb:
+    build:
+      context: ./requirements/mariadb
+    restart: always
+    env_file: .env
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - bridge_inception
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      retries: 3
+      start_period: 5s
+      timeout: 10s
+
+volumes:
+  mariadb_data:
+    driver: local
+  wordpress_files:
+    driver: local
+
+networks:
+  bridge_inception:
+    driver: bridge
