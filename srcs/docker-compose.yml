@@ -14,8 +14,6 @@ services:
       - ./requirements/nginx/ssl:/etc/nginx/ssl
     networks:
       - bridge_inception
-    secrets:
-      - scrt
 
   wordpress: 
     build:
@@ -31,7 +29,10 @@ services:
     networks:
       - bridge_inception
     secrets:
-      - scrt
+      - mysql_root_password
+      - mysql_user
+      - mysql_password
+      - mysql_database
 
   mariadb:
     build:
@@ -52,7 +53,10 @@ services:
       start_period: 5s
       timeout: 10s
     secrets:
-      - scrt
+      - mysql_root_password
+      - mysql_user
+      - mysql_password
+      - mysql_database
 
 volumes:
   mariadb_data:
@@ -70,8 +74,14 @@ volumes:
     
 
 secrets:
-  scrt:
-    file: .env
+  mysql_root_password:
+    file: ./secrets/mysql_root_password
+  mysql_user:
+    file: ./secrets/mysql_user
+  mysql_password:
+    file: ./secrets/mysql_password
+  mysql_database:
+    file: ./secrets/mysql_database
 
 networks:
   bridge_inception:

@@ -4,11 +4,16 @@ service mysql start
 
 sleep 1
 
+export MYSQL_ROOT_PASSWORD=$(cat /run/secrets/mysql_root_password)
+export MYSQL_USER=$(cat /run/secrets/mysql_user)
+export MYSQL_PASSWORD=$(cat /run/secrets/mysql_password)
+export MYSQL_DATABASE=$(cat /run/secrets/mysql_database)
+
 echo $MYSQL_ROOT_PASSWORD
 echo $MYSQL_USER
 echo $MYSQL_PASSWORD
 echo $MYSQL_DATABASE
-mysql <<EOF
+mysql -u root -p$MYSQL_ROOT_PASSWORD <<EOF
 CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;
 CREATE USER IF NOT EXISTS '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
 GRANT ALL PRIVILEGES ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
