@@ -1,22 +1,13 @@
 FROM debian:buster
 
-RUN apt-get update && apt-get install -y \
-    mariadb-server \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
-COPY ./conf/my.cnf /etc/mysql/mariadb.cnf
-COPY ./tools/init_db.sh /usr/local/bin/init_db.sh
+RUN apt-get update -y && apt-get install mariadb-server -y
 
-RUN chmod +x /usr/local/bin/init_db.sh
+COPY ./conf/my.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
 
-# RUN --mount=type=secret,id=scrt chmod +x /conf/init_db.sh && /conf/init_db.sh && rm /conf/init_db.sh
 
-USER mysql
+COPY ./tools/init_db.sh /
 
-EXPOSE 3306
+RUN chmod +x /init_db.sh
 
-# ENTRYPOINT ["/usr/local/bin/init_db.sh"]
-
-# CMD ["mariadbd"]
-ENTRYPOINT ["/usr/sbin/mysqld", "--defaults-file=/etc/mysql/mariadb.cnf"]
+CMD ["/init_db.sh"]

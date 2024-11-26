@@ -10,7 +10,7 @@ services:
     ports:
       - "443:443"
     volumes:
-      - wordpress_files:/home/login/data
+      - wordpress_files:/var/www/html
       - ./requirements/nginx/ssl:/etc/nginx/ssl
     networks:
       - bridge_inception
@@ -27,7 +27,7 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - wordpress_files:/home/login/data
+      - wordpress_files:/var/www/html
     networks:
       - bridge_inception
     secrets:
@@ -39,7 +39,7 @@ services:
     container_name: mariadb
     restart: always
     volumes:
-      - mariadb_data:/home/login/data
+      - mariadb_data:/var/lib/mysql
       - ./secrets:/run/secrets
     networks:
       - bridge_inception
@@ -57,8 +57,17 @@ services:
 volumes:
   mariadb_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/data/mariadb
   wordpress_files:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/data/wordpress
+    
 
 secrets:
   scrt:
