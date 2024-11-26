@@ -1,17 +1,22 @@
 FROM debian:buster
 
-# Install MariaDB server
-RUN apt-get update && apt-get install -y mariadb-server && apt-get clean
+RUN apt-get update && apt-get install -y \
+    mariadb-server \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy configuration and scripts
-COPY ./conf/my.cnf /etc/mysql/my.cnf
-COPY ./tools/init_db.sh /var/www/init_db.sh
+COPY ./conf/my.cnf /etc/mysql/mariadb.cnf
+COPY ./tools/init_db.sh /usr/local/bin/init_db.sh
 
-# Set proper permissions
-RUN chmod +x /var/www/init_db.sh
+RUN chmod +x /usr/local/bin/init_db.sh
 
-# Expose MySQL port
+# RUN --mount=type=secret,id=scrt chmod +x /conf/init_db.sh && /conf/init_db.sh && rm /conf/init_db.sh
+
+USER mysql
+
 EXPOSE 3306
 
-# Start the script and database server
-CMD ["/bin/bash", "-c", "/var/www/init_db.sh && mysqld_safe --datadir=/var/lib/mysql"]
+# ENTRYPOINT ["/usr/local/bin/init_db.sh"]
+
+# CMD ["mariadbd"]
+ENTRYPOINT ["/usr/sbin/mysqld", "--defaults-file=/etc/mysql/mariadb.cnf"]

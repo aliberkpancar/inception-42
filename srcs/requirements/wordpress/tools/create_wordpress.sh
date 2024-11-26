@@ -1,29 +1,19 @@
-#!/bin/bash
+#!/bin/sh
 
-# Check if WordPress is already installed
-if [ ! -f /var/www/html/wp-config.php ]; then
-    echo "Downloading WordPress..."
-    wp core download --path=/var/www/html --allow-root
+if [ -f ./wp-config.php ]; then
+  echo "WordPress already downloaded"
+else
+  wget http://wordpress.org/latest.tar.gz
+  tar xfz latest.tar.gz
+  mv wordpress/* .
+  rm -rf latest.tar.gz
+  rm -rf wordpress
 
-    echo "Creating wp-config.php..."
-    wp config create \
-        --dbname=${WORDPRESS_DB_NAME} \
-        --dbuser=${WORDPRESS_DB_USER} \
-        --dbpass=${WORDPRESS_DB_PASSWORD} \
-        --dbhost=${WORDPRESS_DB_HOST} \
-        --path=/var/www/html \
-        --allow-root
+  sed -i "s/username_here/$MYSQL_USER/g" wp-config-sample.php
+  sed -i "s/password_here/$MYSQL_PASSWORD/g" wp-config-sample.php
+  sed -i "s/database_name_here/$MYSQL_DATABASE/g" wp-config-sample.php
 
-    echo "Installing WordPress..."
-    wp core install \
-        --url=${DOMAIN_NAME} \
-        --title="My WordPress Site" \
-        --admin_user=${WORDPRESS_ADMIN_USER} \
-        --admin_password=${WORDPRESS_ADMIN_PASSWORD} \
-        --admin_email=${WORDPRESS_ADMIN_EMAIL} \
-        --path=/var/www/html \
-        --allow-root
+  cp wp-config-sample.php wp-config.php
 fi
 
-echo "Starting PHP-FPM..."
 exec "$@"

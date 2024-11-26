@@ -4,51 +4,65 @@ services:
   nginx:
     build:
       context: ./requirements/nginx
-    restart: always
+    restart: on-failure
     depends_on:
       - wordpress
     ports:
       - "443:443"
     volumes:
-      - wordpress_files:/var/www/html
+      - wordpress_files:/home/login/data
+      - ./requirements/nginx/ssl:/etc/nginx/ssl
     networks:
       - bridge_inception
+    secrets:
+      - scrt
 
   wordpress: 
     build:
       context: ./requirements/wordpress
-    restart: always
-    env_file: .env
-    ports:
-      - "9000:9000"
+    container_name: wordpress
+    restart: on-failure
     depends_on:
       - mariadb
+    ports:
+      - "9000:9000"
     volumes:
-      - wordpress_files:/var/www/html
+      - wordpress_files:/home/login/data
     networks:
       - bridge_inception
+    secrets:
+      - scrt
 
   mariadb:
     build:
       context: ./requirements/mariadb
+    container_name: mariadb
     restart: always
-    env_file: .env
     volumes:
-      - mariadb_data:/var/lib/mysql
+      - mariadb_data:/home/login/data
+      - ./secrets:/run/secrets
     networks:
       - bridge_inception
+    ports:
+      - "3306:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 30s
       retries: 3
       start_period: 5s
       timeout: 10s
+    secrets:
+      - scrt
 
 volumes:
   mariadb_data:
     driver: local
   wordpress_files:
     driver: local
+
+secrets:
+  scrt:
+    file: .env
 
 networks:
   bridge_inception:

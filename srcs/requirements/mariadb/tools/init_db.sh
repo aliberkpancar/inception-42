@@ -1,33 +1,43 @@
-#!/bin/bash
+#!/bin/sh
 
-# Validate environment variables
-: "${DB_NAME:?DB_NAME is required}"
-: "${DB_USER:?DB_USER is required}"
-: "${DB_PASSWORD:?DB_PASSWORD is required}"
-: "${MYSQL_DB_PASSWORD:?MYSQL_DB_PASSWORD is required}"
+# Export environment variables
+export $(grep -v '^#' /run/secrets/* | xargs)
 
-# Initialize MySQL data directory if not initialized
-if [ ! -d "/var/lib/mysql/mysql" ]; then
-  echo "Initializing MySQL data directory..."
-  mysql_install_db --user=mysql --datadir=/var/lib/mysql
+# Start MariaDB service
+if ! service mariadb start; then
+    echo "Failed to start MariaDB service"
+    exit 1
 fi
 
-# Start MariaDB in the background
-mysqld_safe --datadir=/var/lib/mysql &
+# Database setup
+if ! mariadb -e "CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};"; then
+    echo "Failed to create database ${MYSQL_DATABASE}"
+    exit 1
+fi
 
-# Wait for MariaDB to start
-sleep 5
+# User setup
+if ! mariadb -e "CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';"; then
+    echo "Failed to create user ${MYSQL_USER}"
+    exit 1
+fi
 
-# Run initialization SQL
-cat <<EOF | mysql
-CREATE DATABASE IF NOT EXISTS ${DB_NAME};
-CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
-GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
-FLUSH PRIVILEGES;
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_DB_PASSWORD}';
-EOF
+# Grant privileges
+if ! mariadb -e "GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';"; then
+    echo "Failed to grant privileges to ${MYSQL_USER}"
+    exit 1
+fi
 
-echo "Initialization complete."
+# Flush privileges
+if ! mariadb -e "FLUSH PRIVILEGES;"; then
+    echo "Failed to flush privileges"
+    exit 1
+fi
 
-# Prevent script deletion (for debugging purposes)
-# rm -rf /var/www/init_db.sh
+# Stop MariaDB service (optional)
+if ! service mariadb stop; then
+    echo "Failed to stop MariaDB service"
+    exit 1
+fi
+
+# Run MariaDB in the foreground (if applicable)
+exec mysqld_safe
