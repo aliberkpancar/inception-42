@@ -72,7 +72,6 @@ volumes:
       o: bind
       device: /home/data/wordpress
     
-
 secrets:
   mysql_root_password:
     file: ./secrets/mysql_root_password
