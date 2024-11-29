@@ -11,7 +11,6 @@ services:
       - "443:443"
     volumes:
       - wordpress_files:/var/www/html
-      - ./requirements/nginx/ssl:/etc/nginx/ssl
     networks:
       - bridge_inception
 
@@ -41,7 +40,6 @@ services:
     restart: always
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./secrets:/run/secrets
     networks:
       - bridge_inception
     ports:
