@@ -39,7 +39,7 @@ fi
 
 wp config create --dbname=$MYSQL_DATABASE --dbuser=$MYSQL_USER --dbpass=$MYSQL_PASSWORD --dbhost=mariadb:3306 --skip-check --allow-root
 
-wp core install --url="http://localhost" --title="My WordPress Site" --admin_user="admin" --admin_password=$MYSQL_ROOT_PASSWORD --admin_email="admin@example.com" --allow-root
+wp core install --url="https://apancar.42.fr" --title="My WordPress Site" --admin_user="aliberk" --admin_password=$MYSQL_ROOT_PASSWORD --admin_email="abp@example.com" --allow-root
 
 wp option update blogname "My WordPress Site" --allow-root
 wp option update blogdescription "Just another WordPress site" --allow-root
